@@ -1,0 +1,21 @@
+{
+  "name": "secret-cube",
+  "version": "0.1.0",
+  "description": "the deskapp about secret",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "author": "daren",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^4.0.1",
+    "electron-rebuild": "^1.8.2"
+  },
+  "dependencies": {
+    "aes-js": "^3.1.2",
+    "jquery": "^3.3.1",
+    "materialize-css": "^1.0.0-rc.2",
+    "sqlite3": "^4.0.6"
+  }
+}
