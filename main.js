@@ -1,6 +1,6 @@
 const { app, BrowserWindow, Menu, ipcMain } = require('electron')
 const aescoder = require('./aescoder')
-const dbop = require('./dbop')
+const fileop = require('./fileop')
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -100,14 +100,14 @@ ipcMain.on('account:add', function(e, data) {
 
   console.log(data)
 
-  // todo save data to sqlite3
+  // todo save data to file
   var record = {
     data: data,
     type: 1,
     parent: 0,
     level: 1
   }
-  dbop.saveRecord(record)
+  fileop.saveRecord(record)
 
 
   win.webContents.send('acount:add', data)

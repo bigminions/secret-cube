@@ -129,7 +129,7 @@
         data.password = $('#password').val()
         data.remark = $('#remark').val()
         data.passpharse = 'pass'
-        ipcRenderer.send('account:add', data)
+        ipcRenderer.send('account:add', passpharse, data)
         $("#addform").hide()
     })
 </script>
