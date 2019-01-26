@@ -53,20 +53,7 @@
 <body>
     <div class="container cube-contain">
 
-        <div class="row cube-row">
-            <div class="card cube-card">
-                <div class="card-image cube-card-image blue darken-3">
-                    <!-- <img src="images/sample-1.jpg"> -->
-                    <div class="card-title">Card Title
-                        <span class="card-remark">remarkreamrkremark</span>
-                    </div>
-                </div>
-                <div class="card-content">
-                    <p>INPUT ONE</p>
-                    <p>INPUT ONE</p>
-                </div>
-            </div>
-
+        <div class="row cube-row" id="account-con">
             <a id='addButton' class="btn-floating btn-large waves-effect waves-light blue"><i class="material-icons">add</i></a>
         </div>
 
@@ -128,10 +115,27 @@
         data.account = $('#account').val()
         data.password = $('#password').val()
         data.remark = $('#remark').val()
-        data.passpharse = 'pass'
-        ipcRenderer.send('account:add', data)
+        passpharse = 'pass'
+        ipcRenderer.send('account:add', data, passpharse)
         $("#addform").hide()
     })
+
+    ipcRenderer.on('account:add_succ', (e, record) => {
+        // alert(JSON.stringify(record))
+        $(`<div class="card cube-card">
+                <div class="card-image cube-card-image blue darken-3">
+                    <!-- <img src="images/sample-1.jpg"> -->
+                    <div class="card-title">${record.data.source}
+                        <span class="card-remark">${record.data.remark}</span>
+                    </div>
+                </div>
+                <div class="card-content">
+                    <p>INPUT ONE</p>
+                    <p>INPUT ONE</p>
+                </div>
+            </div>`).appendTo($('#account-con'))
+    })
+    
 </script>
 
 </html>

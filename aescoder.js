@@ -13,15 +13,12 @@ function encrypt(passpharse, text) {
     var textArray = textToI6Bytes(text)
     var key = aesjs.utils.utf8.toBytes(passpharse)
     key = trySplitBytesToSpecialLength(32, key)
-    console.log("the key is = " + key)
     iv = generateIv()
-    console.log("the iv is = " + iv)
     
     var aesCbc = new aesjs.ModeOfOperation.cbc(key, iv)
     var encryptedBytes = aesCbc.encrypt(textArray)
 
     var encryptedHex = aesjs.utils.hex.fromBytes(encryptedBytes)
-    console.log(encryptedHex)
     var ivHex = aesjs.utils.hex.fromBytes(iv)
     return {
         iv : ivHex,
@@ -37,7 +34,6 @@ function decrypt (passpharse, ciphertext , ivHex) {
     var ciphertextArray = aesjs.utils.hex.toBytes(ciphertext)
     var key = aesjs.utils.utf8.toBytes(passpharse)
     key = trySplitBytesToSpecialLength(32, key)
-    console.log("the key is = " + key)
 
     var aesCbc = new aesjs.ModeOfOperation.cbc(key, iv)
     var decryptedBytes = aesCbc.decrypt(ciphertextArray)
@@ -80,9 +76,7 @@ function textToI6Bytes (text) {
 // 16 bytes reset to stand text
 function I6BytesToText (bytes) {
     var textLen = (bytes[0] << 8) + bytes[1]
-    console.log(textLen)
     var textArray = bytes.slice(2, textLen + 2)
-    console.log(textArray)
     return aesjs.utils.utf8.fromBytes(textArray)
 }
 

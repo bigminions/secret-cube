@@ -1,4 +1,4 @@
-const { app, BrowserWindow, Menu, ipcMain } = require('electron')
+const { app, BrowserWindow, Menu, ipcMain, ipcRenderer } = require('electron')
 const aescoder = require('./aescoder')
 const dbop = require('./dbop')
 
@@ -8,7 +8,7 @@ let win
 
 function createWindow () {
   // Create the browser window.
-  win = new BrowserWindow({ width: 800, height: 600 })
+  win = new BrowserWindow({ width: 800, height: 800 })
 
   // and load the index.html of the app.
   win.loadFile('index.html')
@@ -93,10 +93,10 @@ if (process.env.NODE_ENV != 'production') {
   })
 }
 
-ipcMain.on('account:add', function(e, data) {
+ipcMain.on('account:add', function(event, data, passpharse) {
   console.log(data)
-  data.account = aescoder.encrypt(data.passpharse, data.account)
-  data.password = aescoder.encrypt(data.passpharse, data.password)
+  data.account = aescoder.encrypt(passpharse, data.account)
+  data.password = aescoder.encrypt(passpharse, data.password)
 
   console.log(data)
 
@@ -107,8 +107,12 @@ ipcMain.on('account:add', function(e, data) {
     parent: 0,
     level: 1
   }
-  dbop.saveRecord(record)
+  dbop.saveRecord(record, (err, doc) => {
+    if (err) {
 
-
-  win.webContents.send('acount:add', data)
-})
+    } else {
+      console.log('save record succ ' + JSON.stringify(doc))
+      win.webContents.send('account:add_succ', doc)
+    }
+  })
+}) 
