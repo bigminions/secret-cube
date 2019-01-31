@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Index</title>
-    <link rel="stylesheet" href="./node_modules/materialize-css/dist/css/materialize.min.css">
+    <link rel="stylesheet" href="../node_modules/materialize-css/dist/css/materialize.min.css">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <script>
         window.nodeRequire = require
@@ -14,16 +14,29 @@
         delete window.exports
         delete window.module
     </script>
-    <script src="./node_modules/jquery/dist/jquery.min.js"></script>
-    <script src="./node_modules/materialize-css/dist/js/materialize.min.js"></script>
+    <script src="../node_modules/jquery/dist/jquery.min.js"></script>
+    <script src="../node_modules/materialize-css/dist/js/materialize.min.js"></script>
     <style type="text/css">
+        .cube-card-title {
+            position: relative;
+            max-width: 100%;
+            padding: 2rem;
+        }
+
         .cube-contain {
             width: 100%;
             margin: 1rem;
         }
 
-        .cube-card {
+        .cube-card,
+        .card-front,
+        .card-back {
             width: 15rem;
+            height: 15rem;
+        }
+
+        .cube-card {
+            perspective: 1000;
             display: inline-block;
             margin: 0.5rem;
         }
@@ -40,6 +53,7 @@
         .addform {
             display: block;
             position: fixed;
+            background-color: white;
             top: 25%;
             left: 25%;
             width: 50%;
@@ -47,11 +61,69 @@
             margin: 2px blue;
             box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 3px 1px -2px rgba(0, 0, 0, 0.12), 0 1px 5px 0 rgba(0, 0, 0, 0.2);
         }
+
+        /* flip the pane when hovered */
+        .cube-card:hover .flipper,
+        .cube-card.hover .flipper {
+            transform: rotateY(180deg);
+        }
+
+        /* flip speed goes here */
+        .flipper {
+            transition: 0.6s;
+            transform-style: preserve-3d;
+
+            position: relative;
+        }
+
+        /* hide card-back of pane during swap */
+        .card-front,
+        .card-back {
+            backface-visibility: hidden;
+            position: absolute;
+            top: 0;
+            left: 0;
+            color: white;
+        }
+
+        /* card-front pane, placed above card-back */
+        .card-front {
+            z-index: 2;
+        }
+
+        /* card-back, initially hidden pane */
+        .card-back {
+            transform: rotateY(180deg);
+            background-color: grey;
+            padding: 1rem;
+        }
+
+        .card-back p {
+            margin-top: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
     </style>
 </head>
 
 <body>
     <div class="container cube-contain">
+
+        <!-- <div class="cube-card" ontouchstart="this.classList.toggle('hover');">
+            <div class="flipper">
+                <div class="card-front card blue darken-3">
+                    <div class="card-title cube-card-title"><p>Source</p>
+                            <span class="card-remark">Remark: This is a remark text.</span>
+                    </div>
+                </div>
+                <div class="card-back card deep-purple">
+                    <div class="card-title"><p>Source</p>
+                        <span class="card-remark">Remark: This is a remark text.</span>
+                    </div>
+                    <p>Account: 123456789</p>
+                    <p>Password: 987654321</p>
+                </div>
+            </div>
+        </div> -->
 
         <div class="row cube-row" id="account-con">
             <a id='addButton' class="btn-floating btn-large waves-effect waves-light blue"><i class="material-icons">add</i></a>
@@ -100,9 +172,10 @@
     </div>
 </body>
 
+<script src="./js/common.js"></script>
 <script>
-    const electron = nodeRequire('electron')
-    const {ipcRenderer} = electron;
+    // const electron = nodeRequire('electron')
+    // const { ipcRenderer } = electron;
 
     $("#addButton").click(() => {
         $("#addform").show()
@@ -115,27 +188,41 @@
         data.account = $('#account').val()
         data.password = $('#password').val()
         data.remark = $('#remark').val()
-        passpharse = 'pass'
-        ipcRenderer.send('account:add', data, passpharse)
+        ipcRenderer.send('account:add', data)
         $("#addform").hide()
     })
 
-    ipcRenderer.on('account:add_succ', (e, record) => {
-        // alert(JSON.stringify(record))
-        $(`<div class="card cube-card">
-                <div class="card-image cube-card-image blue darken-3">
-                    <!-- <img src="images/sample-1.jpg"> -->
-                    <div class="card-title">${record.data.source}
-                        <span class="card-remark">${record.data.remark}</span>
+    function appendAccountCard(data) {
+        $(`<div class="cube-card" ontouchstart="this.classList.toggle('hover');">
+            <div class="flipper">
+                <div class="card-front card blue darken-3">
+                    <div class="card-title cube-card-title"><p>${data.source}</p>
+                            <span class="card-remark">Remark: ${data.remark}</span>
                     </div>
                 </div>
-                <div class="card-content">
-                    <p>INPUT ONE</p>
-                    <p>INPUT ONE</p>
+                <div class="card-back card deep-purple">
+                    <div class="card-title"><p>${data.source}</p>
+                        <span class="card-remark">Remark: ${data.remark}</span>
+                    </div>
+                    <p>Account: ${data.account}</p>
+                    <p>Password: ${data.password}</p>
                 </div>
-            </div>`).appendTo($('#account-con'))
+            </div>
+        </div>`).insertBefore($('#addButton'))
+    }
+
+    ipcRenderer.on('accounts', (event, accounts) => {
+        console.log(accounts)
+        for (let acc of accounts) {
+            appendAccountCard(acc)
+        }
     })
-    
+
+    ipcRenderer.on('account:add_succ', (e, record) => {
+        console.log(record)
+        appendAccountCard(record.data)
+    })
+
 </script>
 
 </html>

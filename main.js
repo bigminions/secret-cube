@@ -1,118 +1,131 @@
 const { app, BrowserWindow, Menu, ipcMain, ipcRenderer } = require('electron')
+const path = require('path')
 const aescoder = require('./aescoder')
-const dbop = require('./dbop')
+const {Dbstore, Record} = require('./Dbstore')
 
-// Keep a global reference of the window object, if you don't, the window will
-// be closed automatically when the JavaScript object is garbage collected.
 let win
 
-function createWindow () {
-  // Create the browser window.
-  win = new BrowserWindow({ width: 800, height: 800 })
+function main() {
+    win = new BrowserWindow({
+        width: 800,
+        height: 800,
+        show: false
+    })
 
-  // and load the index.html of the app.
-  win.loadFile('index.html')
+    win.loadFile(path.join('renderer', 'login.html'))
 
-  // Emitted when the window is closed.
-  win.on('closed', () => {
-    // Dereference the window object, usually you would store windows
-    // in an array if your app supports multi windows, this is the time
-    // when you should delete the corresponding element.
-    win = null
-  })
+    win.on('ready-to-show', () => {
+        win.show()
+    })
 
-  const mainMenu = Menu.buildFromTemplate(mainMenuTemplate)
-  Menu.setApplicationMenu(mainMenu)
+    win.on('closed', () => {
+        win = null
+    })
+
+    const mainMenu = Menu.buildFromTemplate(mainMenuTemplate)
+    Menu.setApplicationMenu(mainMenu)
+}
+
+function loadIndexPage() {
+    win.webContents.loadFile((path.join('renderer', 'index.html')))
+    win.webContents.on('dom-ready', () => {
+        dbStore.findAccounts({}, (err, docs) => {
+            console.log('into findAccounts   ' + docs)
+            if (err) {
+                wintip('can not init data')
+            } else {
+                win.webContents.send('accounts', docs)
+            }
+        })
+    })
+}
+
+function wintip (msg) {
+    win.webContents.send('comm-err', msg)
 }
 
 let mainMenuTemplate = [{
-  label: 'File',
-  submenu: [
-    {
-      label: 'Add Item',
-      click() {
-        createAddWindow()
-      }
-    }, 
-    {
-      label: 'Quit',
-      accelerator: process.platform == 'darwin' ? 'Command+Q' : 'Ctrl+Q',
-      click() {
-        app.quit()
-      }
-    }
-  ]
+    label: 'File',
+    submenu: [
+        {
+            label: 'Add Item',
+            click() {
+                createAddWindow()
+            }
+        },
+        {
+            label: 'Quit',
+            accelerator: process.platform == 'darwin' ? 'Command+Q' : 'Ctrl+Q',
+            click() {
+                app.quit()
+            }
+        }
+    ]
 }]
 
-let addWindow
-function createAddWindow () {
-  addWindow = new BrowserWindow({})
-  addWindow.loadFile('addWindow.html')
+if (process.env.NODE_ENV != 'production') {
+    mainMenuTemplate.push({
+        label: 'Developer Tools',
+        submenu: [
+            {
+                label: 'Toggle DevTools',
+                accelerator: process.platform == 'darwin' ? 'Command+I' : 'Ctrl+I',
+                click(item, focusedWindow) {
+                    focusedWindow.toggleDevTools();
+                }
+            },
+            {
+                role: 'reload'
+            }
+        ]
+    })
 }
 
-// This method will be called when Electron has finished
-// initialization and is ready to create browser windows.
-// Some APIs can only be used after this event occurs.
-app.on('ready', createWindow)
+let dbStore
+ipcMain.on('login', (event, data) => {
+    dbStore = new Dbstore(data.username, data.password)
+    dbStore.login(err => {
+        if (err != null) {
+            wintip('username or passowrd error')
+        } else {
+            loadIndexPage()
+        }
+    })
+})
 
-// Quit when all windows are closed.
+ipcMain.on('register', (event, data) => {
+    dbStore = new Dbstore(data.username, data.password)
+    dbStore.register((err) => {
+        if (err != null) {  
+            wintip(err)
+        } else {
+            loadIndexPage()
+        }
+    })
+})
+
+ipcMain.on('account:add', (event, data) => {
+    let record = Record.newAccountRecord(data)
+    dbStore.saveAccount(record, (err, doc) => {
+        if (err) {
+            wintip('save error')
+        } else {
+            console.log('save record succ ' + JSON.stringify(doc))
+            win.webContents.send('account:add_succ', doc)
+        }
+    })
+})
+
+app.on('ready', main)
+
 app.on('window-all-closed', () => {
-  // On macOS it is common for applications and their menu bar
-  // to stay active until the user quits explicitly with Cmd + Q
-  if (process.platform !== 'darwin') {
-    app.quit()
-  }
+    if (process.platform !== 'darwin') {
+        app.quit()
+    }
 })
 
 app.on('activate', () => {
-  // On macOS it's common to re-create a window in the app when the
-  // dock icon is clicked and there are no other windows open.
-  if (win === null) {
-    createWindow()
-  }
-})
-
-// In this file you can include the rest of your app's specific main process
-// code. You can also put them in separate files and require them here.
-
-if (process.env.NODE_ENV != 'production') {
-  mainMenuTemplate.push({
-    label: 'Developer Tools',
-    submenu:[
-      {
-        label: 'Toggle DevTools',
-        accelerator: process.platform == 'darwin' ? 'Command+I' : 'Ctrl+I',
-        click(item, focusedWindow) {
-          focusedWindow.toggleDevTools();
-        }
-      }, 
-      {
-        role: 'reload'
-      }
-    ]
-  })
-}
-
-ipcMain.on('account:add', function(event, data, passpharse) {
-  console.log(data)
-  data.account = aescoder.encrypt(passpharse, data.account)
-  data.password = aescoder.encrypt(passpharse, data.password)
-
-  console.log(data)
-
-  // todo save data to sqlite3
-  var record = {
-    data: data,
-    type: 1,
-    parent: 0,
-    level: 1
-  }
-  dbop.saveRecord(record, (err, doc) => {
-    if (err) {
-
-    } else {
-      console.log('save record succ ' + JSON.stringify(doc))
-      win.webContents.send('account:add_succ', doc)
+    if (win === null) {
+        main()
     }
-  })
-}) 
+})

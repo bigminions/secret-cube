@@ -1,6 +1,6 @@
 // https://www.npmjs.com/package/aes-js
 
-var aesjs = require("aes-js")
+const aesjs = require("aes-js")
 
 exports.encrypt = encrypt
 exports.decrypt = decrypt

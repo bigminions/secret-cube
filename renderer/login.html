@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Index</title>
+    <link rel="stylesheet" href="../node_modules/materialize-css/dist/css/materialize.min.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <script>
+        window.nodeRequire = require
+        delete window.require
+        delete window.exports
+        delete window.module
+    </script>
+    <script src="../node_modules/jquery/dist/jquery.min.js"></script>
+    <script src="../node_modules/materialize-css/dist/js/materialize.min.js"></script>
+    <style type="text/css">
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="row">
+            <form class="col s12">
+                <div class="row">
+                    <div class="input-field col s12">
+                        <input id="username" type="text" class="validate">
+                        <label for="username">Username</label>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="input-field col s12">
+                        <input id="password" type="password" class="validate">
+                        <label for="password">Password</label>
+                    </div>
+                </div>
+                <div class="row">
+                        <button id='login' class="btn waves-effect waves-light" type="submit" name="action">Login
+                            <i class="material-icons right">send</i>
+                        </button>
+                    </div>
+
+                    <div class="row">
+                        <button id='register' class="btn waves-effect waves-light" type="submit" name="action">Register
+                            <i class="material-icons right">send</i>
+                        </button>
+                    </div>
+            </form>
+        </div>
+    </div>
+</body>
+
+<script src="./js/common.js"></script>
+<script>
+    // const electron = nodeRequire('electron')
+    // const { ipcRenderer } = electron;
+
+    $("#addButton").click(() => {
+        $("#addform").show()
+    })
+
+    $("#login").click((e) => {
+        e.preventDefault();
+        var data = {}
+        data.username = $('#username').val()
+        data.password = $('#password').val()
+        ipcRenderer.send('login', data)
+        $(this).attr('disabled', 'disabled')
+    })
+
+    $("#register").click((e) => {
+        e.preventDefault();
+        var data = {}
+        data.username = $('#username').val()
+        data.password = $('#password').val()
+        ipcRenderer.send('register', data)
+        $(this).attr('disabled', 'disabled')
+    })
+
+</script>
+
+</html>
