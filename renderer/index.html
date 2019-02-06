@@ -17,6 +17,20 @@
     <script src="../node_modules/jquery/dist/jquery.min.js"></script>
     <script src="../node_modules/materialize-css/dist/js/materialize.min.js"></script>
     <style type="text/css">
+        .html {
+            height: 100%;
+        }
+
+        .body {
+            height: 100%;
+            display: -webkit-flex;
+            display: flex;
+            -webkit-align-items: center;
+            align-items: center;
+            -webkit-justify-content: center;
+            justify-content: center;
+        }
+
         .cube-card-title {
             position: relative;
             max-width: 100%;
@@ -25,7 +39,7 @@
 
         .cube-contain {
             width: 100%;
-            margin: 1rem;
+            padding: 1rem;
         }
 
         .cube-card,
@@ -53,12 +67,16 @@
         .addform {
             display: block;
             position: fixed;
+            padding: 2rem;
+            z-index: 100;
             background-color: white;
-            top: 25%;
-            left: 25%;
-            width: 50%;
-            height: 50%;
-            margin: 2px blue;
+            margin: auto;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            top: 0;
+            width: 28rem;
+            height: 33rem;
             box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 3px 1px -2px rgba(0, 0, 0, 0.12), 0 1px 5px 0 rgba(0, 0, 0, 0.2);
         }
 
@@ -102,6 +120,11 @@
             margin-top: 0.5rem;
             margin-bottom: 0.5rem;
         }
+
+        .input-field {
+            margin-top: 1rem;
+            margin-bottom: 0;
+        }
     </style>
 </head>
 
@@ -132,43 +155,49 @@
     </div>
 
     <div id="addform" class="addform" style="display: none">
-        <div class="row">
-            <form id="accountfrom" class="col s12">
-                <div class="row">
-                    <div class="input-field col s10">
-                        <i class="material-icons prefix">mode_edit</i>
-                        <textarea id="source" class="materialize-textarea"></textarea>
-                        <label for="source">Source</label>
-                    </div>
+        <form id="accountfrom" class="col s12">
+            <div class="row">
+                <div class="input-field col s12">
+                    <textarea id="source" class="materialize-textarea"></textarea>
+                    <label for="source">Source</label>
                 </div>
-                <div class="row">
-                    <div class="input-field col s10">
-                        <i class="material-icons prefix">mode_edit</i>
-                        <textarea id="account" class="materialize-textarea"></textarea>
-                        <label for="account">Account</label>
-                    </div>
+            </div>
+            <div class="row">
+                <div class="input-field col s9">
+                    <textarea id="account" class="materialize-textarea"></textarea>
+                    <label for="account">Account</label>
                 </div>
-                <div class="row">
-                    <div class="input-field col s9">
-                        <i class="material-icons prefix">mode_edit</i>
-                        <textarea id="password" class="materialize-textarea"></textarea>
-                        <label for="password">Password</label>
-                    </div>
+                <div class="col s3">
+                    <p class="range-field">
+                        <input type="range" id="account-butt" min="0" max="99" value="20">
+                    </p>
                 </div>
-                <div class="row">
-                    <div class="input-field col s10">
-                        <i class="material-icons prefix">mode_edit</i>
-                        <textarea id="remark" class="materialize-textarea"></textarea>
-                        <label for="remark">Remark</label>
-                    </div>
+            </div>
+            <div class="row">
+                <div class="input-field col s9">
+                    <textarea id="password" class="materialize-textarea"></textarea>
+                    <label for="password">Password</label>
                 </div>
-                <div class="row">
-                    <button class="btn waves-effect waves-light" type="submit" name="action">Submit
-                        <i class="material-icons right">send</i>
-                    </button>
+                <div class="col s3">
+                    <p class="range-field">
+                        <input type="range" id="password-butt" min="0" max="99" value="50">
+                    </p>
                 </div>
-            </form>
-        </div>
+            </div>
+            <div class="row">
+                <div class="input-field col s12">
+                    <textarea id="remark" class="materialize-textarea"></textarea>
+                    <label for="remark">Remark</label>
+                </div>
+            </div>
+            <div class="row">
+                <button class="btn waves-effect waves-light" type="submit" name="action">Add
+                </button>
+                <button id='form-close-butt' class="btn waves-effect waves-light" type="button" name="action">
+                    <i class="material-icons">close</i>
+                </button>
+            </div>
+        </form>
     </div>
 </body>
 
@@ -176,21 +205,59 @@
 <script>
     // const electron = nodeRequire('electron')
     // const { ipcRenderer } = electron;
+    const rangener = nodeRequire('../rangener')
 
-    $("#addButton").click(() => {
-        $("#addform").show()
+    $(() => {
+        $("#addButton").click(() => {
+            $("#addform").show()
+            setRandomVal('#account')
+            setRandomVal('#password')
+
+        })
+
+        $("#accountfrom").submit((e) => {
+            e.preventDefault();
+            var data = {}
+            data.source = $('#source').val()
+            data.account = $('#account').val()
+            data.password = $('#password').val()
+            data.remark = $('#remark').val()
+            ipcRenderer.send('account:add', data)
+            hideAddForm()
+        })
+
+        $("#form-close-butt").click(e => {
+            hideAddForm()
+        })
+
+        initRandomCtl('#account')
+        initRandomCtl('#password')
+
     })
 
-    $("#accountfrom").submit((e) => {
-        e.preventDefault();
-        var data = {}
-        data.source = $('#source').val()
-        data.account = $('#account').val()
-        data.password = $('#password').val()
-        data.remark = $('#remark').val()
-        ipcRenderer.send('account:add', data)
+    function setRandomVal(inputId) {
+        $(inputId).attr('placeholder', '')
+        $(inputId).next('label').addClass('active')
+        $(inputId).val(rangener.generate($(inputId + '-butt').val()))
+    }
+
+    function initRandomCtl(inputId) {
+        $(inputId + "-butt").mousedown(() => {
+            $(this).mousemove(() => {
+                setRandomVal(inputId)
+            })
+        }).mouseup(() => {
+            $(this).unbind('mousemove')
+        }).click(() => {
+            setRandomVal(inputId)
+        })
+    }
+
+    function hideAddForm() {
+        $('#account-butt').val(20)
+        $('#password-butt').val(50)
         $("#addform").hide()
-    })
+    }
 
     function appendAccountCard(data) {
         $(`<div class="cube-card" ontouchstart="this.classList.toggle('hover');">

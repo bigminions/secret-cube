@@ -7,9 +7,11 @@ let win
 
 function main() {
     win = new BrowserWindow({
-        width: 800,
+        width: 940,
         height: 800,
-        show: false
+        show: false,
+        autoHideMenuBar: true,
+        // frame: false, todo 设置无边框 参考https://blog.csdn.net/toubennuhai/article/details/53039612
     })
 
     win.loadFile(path.join('renderer', 'login.html'))
@@ -30,7 +32,6 @@ function loadIndexPage() {
     win.webContents.loadFile((path.join('renderer', 'index.html')))
     win.webContents.on('dom-ready', () => {
         dbStore.findAccounts({}, (err, docs) => {
-            console.log('into findAccounts   ' + docs)
             if (err) {
                 wintip('can not init data')
             } else {
