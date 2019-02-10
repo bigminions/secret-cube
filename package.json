@@ -1,5 +1,5 @@
 {
-  "name": "secret-cube",
+  "name": "secret-cube-0.01",
   "version": "0.1.0",
   "description": "the deskapp about secret",
   "main": "main.js",
@@ -9,7 +9,7 @@
   "author": "daren",
   "license": "MIT",
   "devDependencies": {
-    "electron": "^4.0.1",
+    "electron": "^4.0.4",
     "electron-rebuild": "^1.8.2"
   },
   "dependencies": {

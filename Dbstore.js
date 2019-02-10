@@ -89,16 +89,11 @@ class Dbstore {
 
     findAccounts(condition = {}, callback = (err, docs) => { }) {
         condition.type = DataType.Account
-        this.db.find(condition).sort({crt: 1}).exec((err, docs) => {
-            if (docs) {
-                let dataArray = []
-                for (let doc of docs) {
-                    dataArray.push(doc.data)
-                }
-                docs = dataArray
-            }
-            callback(err, docs)
-        })
+        this.db.find(condition).sort({crt: 1}).exec(callback)
+    }
+
+    delRecord (id) {
+        this.db.remove({_id: id})
     }
 
 }

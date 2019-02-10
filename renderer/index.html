@@ -8,14 +8,6 @@
     <title>Index</title>
     <link rel="stylesheet" href="../node_modules/materialize-css/dist/css/materialize.min.css">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-    <script>
-        window.nodeRequire = require
-        delete window.require
-        delete window.exports
-        delete window.module
-    </script>
-    <script src="../node_modules/jquery/dist/jquery.min.js"></script>
-    <script src="../node_modules/materialize-css/dist/js/materialize.min.js"></script>
     <style type="text/css">
         .html {
             height: 100%;
@@ -29,6 +21,23 @@
             align-items: center;
             -webkit-justify-content: center;
             justify-content: center;
+        }
+
+        .top-menu {
+            position: relative;
+            padding: 1rem;
+        }
+        .search-wrapper {
+            width: 15rem;
+            margin-right: 3rem;
+            float: left;
+        }
+
+        .search-wrapper i.material-icons {
+            position: absolute;
+            top: 2rem;
+            left: 14rem;
+            cursor: pointer;
         }
 
         .cube-card-title {
@@ -52,7 +61,9 @@
         .cube-card {
             perspective: 1000;
             display: inline-block;
-            margin: 0.5rem;
+            margin: 0.8rem;
+            position: relative;
+            cursor: pointer;
         }
 
         .cube-card-image {
@@ -81,8 +92,7 @@
         }
 
         /* flip the pane when hovered */
-        .cube-card:hover .flipper,
-        .cube-card.hover .flipper {
+        .flip {
             transform: rotateY(180deg);
         }
 
@@ -90,7 +100,6 @@
         .flipper {
             transition: 0.6s;
             transform-style: preserve-3d;
-
             position: relative;
         }
 
@@ -125,31 +134,27 @@
             margin-top: 1rem;
             margin-bottom: 0;
         }
+
+        .del-butt {
+            position: absolute;
+            top: -1rem;
+            left: 13.5rem;
+        }
     </style>
 </head>
 
 <body>
+    <div class="top-menu">
+        <div class="search-wrapper">
+            <input id="search" placeholder="Search">
+            <i class="material-icons">search</i>
+        </div>
+        <a id='addButton' class="btn-floating waves-effect waves-light blue"><i class="material-icons">add</i></a>
+        <a id='deleteButton' class="btn-floating waves-effect waves-light blue"><i class="material-icons">delete</i></a>
+    </div>
     <div class="container cube-contain">
 
-        <!-- <div class="cube-card" ontouchstart="this.classList.toggle('hover');">
-            <div class="flipper">
-                <div class="card-front card blue darken-3">
-                    <div class="card-title cube-card-title"><p>Source</p>
-                            <span class="card-remark">Remark: This is a remark text.</span>
-                    </div>
-                </div>
-                <div class="card-back card deep-purple">
-                    <div class="card-title"><p>Source</p>
-                        <span class="card-remark">Remark: This is a remark text.</span>
-                    </div>
-                    <p>Account: 123456789</p>
-                    <p>Password: 987654321</p>
-                </div>
-            </div>
-        </div> -->
-
         <div class="row cube-row" id="account-con">
-            <a id='addButton' class="btn-floating btn-large waves-effect waves-light blue"><i class="material-icons">add</i></a>
         </div>
 
     </div>
@@ -201,10 +206,24 @@
     </div>
 </body>
 
+<script>
+    window.nodeRequire = require
+    delete window.require
+    delete window.exports
+    delete window.module
+</script>
+
+<!-- Insert this line above script imports  -->
+<script>if (typeof module === 'object') {window.module = module; module = undefined;}</script>
+
+<!-- normal script imports etc  -->
+<script src="../node_modules/jquery/dist/jquery.min.js"></script> 
+<script src="../node_modules/materialize-css/dist/js/materialize.min.js"></script>
+
+<!-- Insert this line after script imports -->
+<script>if (window.module) module = window.module;</script>
 <script src="./js/common.js"></script>
 <script>
-    // const electron = nodeRequire('electron')
-    // const { ipcRenderer } = electron;
     const rangener = nodeRequire('../rangener')
 
     $(() => {
@@ -212,7 +231,30 @@
             $("#addform").show()
             setRandomVal('#account')
             setRandomVal('#password')
+        })
 
+        $(document).on('click', '.flipper', function(e) {
+            $(this).toggleClass('flip')
+        })
+
+        delbuttfun = () => {
+            let i = 0
+            return () => {
+                if (i++ % 2 == 0) {
+                    $(".del-butt").show()
+                } else {
+                    $(".del-butt").hide()
+                }
+            }
+        }
+        $("#deleteButton").click(delbuttfun())
+
+        $(document).on('click', '.del-butt', function(e) {
+            let flag = confirm('are you sure to delete ' + $(this).data('source'))
+            if (flag) {
+                console.log('try to del id = ' + $(this).data('id'))
+                ipcRenderer.send('record:del', $(this).data('id'))
+            }
         })
 
         $("#accountfrom").submit((e) => {
@@ -259,23 +301,26 @@
         $("#addform").hide()
     }
 
-    function appendAccountCard(data) {
-        $(`<div class="cube-card" ontouchstart="this.classList.toggle('hover');">
+    function appendAccountCard(record) {
+        $('.cube-row').append(`<div id='${record._id}' class="cube-card">
             <div class="flipper">
                 <div class="card-front card blue darken-3">
-                    <div class="card-title cube-card-title"><p>${data.source}</p>
-                            <span class="card-remark">Remark: ${data.remark}</span>
+                    <div class="card-title cube-card-title"><p>${record.data.source}</p>
+                            <span class="card-remark">Remark: ${record.data.remark}</span>
                     </div>
                 </div>
                 <div class="card-back card deep-purple">
-                    <div class="card-title"><p>${data.source}</p>
-                        <span class="card-remark">Remark: ${data.remark}</span>
+                    <div class="card-title"><p>${record.data.source}</p>
+                        <span class="card-remark">Remark: ${record.data.remark}</span>
                     </div>
-                    <p>Account: ${data.account}</p>
-                    <p>Password: ${data.password}</p>
+                    <p>Account: ${record.data.account}</p>
+                    <p>Password: ${record.data.password}</p>
                 </div>
             </div>
-        </div>`).insertBefore($('#addButton'))
+            <button data-id='${record._id}' data-source='${record.data.source}' class="btn-floating del-butt" type="button" name="action" style="display: none">
+                <i class="material-icons">close</i>
+            </button>
+        </div>`)
     }
 
     ipcRenderer.on('accounts', (event, accounts) => {
@@ -287,7 +332,14 @@
 
     ipcRenderer.on('account:add_succ', (e, record) => {
         console.log(record)
-        appendAccountCard(record.data)
+        appendAccountCard(record)
+    })
+
+    ipcRenderer.on('record:del_succ', (e, id) => {
+        console.log('del succ ' + id)
+        $('#' + id).fadeOut(800, () => {
+            $('#' + id).remove()
+        })
     })
 
 </script>

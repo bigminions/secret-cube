@@ -111,10 +111,15 @@ ipcMain.on('account:add', (event, data) => {
         if (err) {
             wintip('save error')
         } else {
-            console.log('save record succ ' + JSON.stringify(doc))
             win.webContents.send('account:add_succ', doc)
         }
     })
+})
+
+ipcMain.on('record:del', (event, id) => {
+    dbStore.delRecord(id)
+    console.log('del record succ ' + id)
+    win.webContents.send('record:del_succ', id)
 })
 
 app.on('ready', main)
