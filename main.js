@@ -7,8 +7,8 @@ let win
 
 function main() {
     win = new BrowserWindow({
-        width: 940,
-        height: 800,
+        width: 950,
+        height: 850,
         show: false,
         autoHideMenuBar: true,
         // frame: false, todo 设置无边框 参考https://blog.csdn.net/toubennuhai/article/details/53039612

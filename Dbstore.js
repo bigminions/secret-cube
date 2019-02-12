@@ -78,6 +78,7 @@ class Dbstore {
                         callback('password error')
                     }
                 })
+                this.db.persistence.compactDatafile()
             }
         })
     }

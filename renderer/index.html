@@ -27,6 +27,7 @@
             position: relative;
             padding: 1rem;
         }
+
         .search-wrapper {
             width: 15rem;
             margin-right: 3rem;
@@ -40,12 +41,6 @@
             cursor: pointer;
         }
 
-        .cube-card-title {
-            position: relative;
-            max-width: 100%;
-            padding: 2rem;
-        }
-
         .cube-contain {
             width: 100%;
             padding: 1rem;
@@ -54,8 +49,9 @@
         .cube-card,
         .card-front,
         .card-back {
-            width: 15rem;
-            height: 15rem;
+            width: 20rem;
+            height: 13.6rem;
+            border-radius: 0.7rem;
         }
 
         .cube-card {
@@ -66,13 +62,63 @@
             cursor: pointer;
         }
 
-        .cube-card-image {
-            height: 10rem;
+        .flip {
+            transform: rotateY(180deg);
         }
 
-        .card-remark {
+        .flipper {
+            transition: 0.6s;
+            transform-style: preserve-3d;
+            position: relative;
+        }
+
+        .card-front,
+        .card-back {
+            backface-visibility: hidden;
+            position: absolute;
+            top: 0;
+            left: 0;
+            color: white;
+            padding: 1.35rem;
+        }
+
+        .card-front {
+            z-index: 2;
+        }
+
+        .card-back {
+            transform: rotateY(180deg);
+            background-color: grey;
+        }
+
+        .card-back p {
+            margin-top: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .cube-card-title {
+            position: relative;
+            max-width: 100%;
+            margin-bottom: 1rem;
+            font-size: 2rem;
+        }
+
+        .cube-card-remark {
+            white-space: pre-wrap;
             word-wrap: break-word;
-            font-size: 75%;
+            font-size: 1rem;
+        }
+
+        .cube-card-account {
+            font-size: 1rem;
+        }
+
+        .cube-card-account table tr {
+            border: 0;
+        }
+
+        .vis-butt, .copy-butt{
+            cursor: pointer;
         }
 
         .addform {
@@ -91,45 +137,6 @@
             box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 3px 1px -2px rgba(0, 0, 0, 0.12), 0 1px 5px 0 rgba(0, 0, 0, 0.2);
         }
 
-        /* flip the pane when hovered */
-        .flip {
-            transform: rotateY(180deg);
-        }
-
-        /* flip speed goes here */
-        .flipper {
-            transition: 0.6s;
-            transform-style: preserve-3d;
-            position: relative;
-        }
-
-        /* hide card-back of pane during swap */
-        .card-front,
-        .card-back {
-            backface-visibility: hidden;
-            position: absolute;
-            top: 0;
-            left: 0;
-            color: white;
-        }
-
-        /* card-front pane, placed above card-back */
-        .card-front {
-            z-index: 2;
-        }
-
-        /* card-back, initially hidden pane */
-        .card-back {
-            transform: rotateY(180deg);
-            background-color: grey;
-            padding: 1rem;
-        }
-
-        .card-back p {
-            margin-top: 0.5rem;
-            margin-bottom: 0.5rem;
-        }
-
         .input-field {
             margin-top: 1rem;
             margin-bottom: 0;
@@ -138,7 +145,12 @@
         .del-butt {
             position: absolute;
             top: -1rem;
-            left: 13.5rem;
+            left: 18.5rem;
+        }
+
+        .pagination {
+            margin: 0 auto;
+            text-align: center;
         }
     </style>
 </head>
@@ -204,6 +216,15 @@
             </div>
         </form>
     </div>
+    <ul class="pagination">
+        <li class="disabled"><a href="#!"><i class="material-icons">chevron_left</i></a></li>
+        <li class="active"><a href="#!">1</a></li>
+        <li class="waves-effect"><a href="#!">2</a></li>
+        <li class="waves-effect"><a href="#!">3</a></li>
+        <li class="waves-effect"><a href="#!">4</a></li>
+        <li class="waves-effect"><a href="#!">5</a></li>
+        <li class="waves-effect"><a href="#!"><i class="material-icons">chevron_right</i></a></li>
+    </ul>
 </body>
 
 <script>
@@ -212,136 +233,14 @@
     delete window.exports
     delete window.module
 </script>
-
 <!-- Insert this line above script imports  -->
-<script>if (typeof module === 'object') {window.module = module; module = undefined;}</script>
-
+<script>if (typeof module === 'object') { window.module = module; module = undefined; }</script>
 <!-- normal script imports etc  -->
-<script src="../node_modules/jquery/dist/jquery.min.js"></script> 
+<script src="../node_modules/jquery/dist/jquery.min.js"></script>
 <script src="../node_modules/materialize-css/dist/js/materialize.min.js"></script>
-
 <!-- Insert this line after script imports -->
 <script>if (window.module) module = window.module;</script>
 <script src="./js/common.js"></script>
-<script>
-    const rangener = nodeRequire('../rangener')
-
-    $(() => {
-        $("#addButton").click(() => {
-            $("#addform").show()
-            setRandomVal('#account')
-            setRandomVal('#password')
-        })
-
-        $(document).on('click', '.flipper', function(e) {
-            $(this).toggleClass('flip')
-        })
-
-        delbuttfun = () => {
-            let i = 0
-            return () => {
-                if (i++ % 2 == 0) {
-                    $(".del-butt").show()
-                } else {
-                    $(".del-butt").hide()
-                }
-            }
-        }
-        $("#deleteButton").click(delbuttfun())
-
-        $(document).on('click', '.del-butt', function(e) {
-            let flag = confirm('are you sure to delete ' + $(this).data('source'))
-            if (flag) {
-                console.log('try to del id = ' + $(this).data('id'))
-                ipcRenderer.send('record:del', $(this).data('id'))
-            }
-        })
-
-        $("#accountfrom").submit((e) => {
-            e.preventDefault();
-            var data = {}
-            data.source = $('#source').val()
-            data.account = $('#account').val()
-            data.password = $('#password').val()
-            data.remark = $('#remark').val()
-            ipcRenderer.send('account:add', data)
-            hideAddForm()
-        })
-
-        $("#form-close-butt").click(e => {
-            hideAddForm()
-        })
-
-        initRandomCtl('#account')
-        initRandomCtl('#password')
-
-    })
-
-    function setRandomVal(inputId) {
-        $(inputId).attr('placeholder', '')
-        $(inputId).next('label').addClass('active')
-        $(inputId).val(rangener.generate($(inputId + '-butt').val()))
-    }
-
-    function initRandomCtl(inputId) {
-        $(inputId + "-butt").mousedown(() => {
-            $(this).mousemove(() => {
-                setRandomVal(inputId)
-            })
-        }).mouseup(() => {
-            $(this).unbind('mousemove')
-        }).click(() => {
-            setRandomVal(inputId)
-        })
-    }
-
-    function hideAddForm() {
-        $('#account-butt').val(20)
-        $('#password-butt').val(50)
-        $("#addform").hide()
-    }
-
-    function appendAccountCard(record) {
-        $('.cube-row').append(`<div id='${record._id}' class="cube-card">
-            <div class="flipper">
-                <div class="card-front card blue darken-3">
-                    <div class="card-title cube-card-title"><p>${record.data.source}</p>
-                            <span class="card-remark">Remark: ${record.data.remark}</span>
-                    </div>
-                </div>
-                <div class="card-back card deep-purple">
-                    <div class="card-title"><p>${record.data.source}</p>
-                        <span class="card-remark">Remark: ${record.data.remark}</span>
-                    </div>
-                    <p>Account: ${record.data.account}</p>
-                    <p>Password: ${record.data.password}</p>
-                </div>
-            </div>
-            <button data-id='${record._id}' data-source='${record.data.source}' class="btn-floating del-butt" type="button" name="action" style="display: none">
-                <i class="material-icons">close</i>
-            </button>
-        </div>`)
-    }
-
-    ipcRenderer.on('accounts', (event, accounts) => {
-        console.log(accounts)
-        for (let acc of accounts) {
-            appendAccountCard(acc)
-        }
-    })
-
-    ipcRenderer.on('account:add_succ', (e, record) => {
-        console.log(record)
-        appendAccountCard(record)
-    })
-
-    ipcRenderer.on('record:del_succ', (e, id) => {
-        console.log('del succ ' + id)
-        $('#' + id).fadeOut(800, () => {
-            $('#' + id).remove()
-        })
-    })
-
-</script>
+<script src="./js/index.js"></script>
 
 </html>
