@@ -31,13 +31,25 @@ function main() {
 function loadIndexPage() {
     win.webContents.loadFile((path.join('renderer', 'index.html')))
     win.webContents.on('dom-ready', () => {
-        dbStore.findAccounts({}, (err, docs) => {
-            if (err) {
-                wintip('can not init data')
-            } else {
-                win.webContents.send('accounts', docs)
+        loadpage(1)
+    })
+}
+
+function loadpage (page) {
+    dbStore.findAccounts({}, (err, docs) => {
+        if (err) {
+            wintip('can not init data')
+        } else {
+            let maxpage = Math.ceil(docs.length / 9)
+            if (page < 1) {
+                page = 1
             }
-        })
+            if (page > maxpage) {
+                page = maxpage
+            }
+            docs = docs.slice((page - 1) * 9, page * 9)
+            win.webContents.send('accounts', docs, {currpage: page, maxpage: maxpage})
+        }
     })
 }
 
@@ -111,7 +123,7 @@ ipcMain.on('account:add', (event, data) => {
         if (err) {
             wintip('save error')
         } else {
-            win.webContents.send('account:add_succ', doc)
+            loadpage(100000000) // 刷新最后一页
         }
     })
 })
@@ -120,6 +132,10 @@ ipcMain.on('record:del', (event, id) => {
     dbStore.delRecord(id)
     console.log('del record succ ' + id)
     win.webContents.send('record:del_succ', id)
+})
+
+ipcMain.on('loadpage', (event, page) => {
+    loadpage(page)
 })
 
 app.on('ready', main)

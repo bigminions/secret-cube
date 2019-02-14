@@ -11,13 +11,13 @@ $(() => {
         $(this).toggleClass('flip')
     })
 
+    // 密码可见
     $(document).on('mousedown', '.vis-butt', function(e) {
         e.stopPropagation()
         $(this).parent().prev().prev().css('-webkit-text-security', 'none')
     }).on('mouseup', '.vis-butt', function(e) {
         $(this).parent().prev().prev().css('-webkit-text-security', 'disc')
     }).on('click', '.vis-butt', function(e) {
-        console.log('i been click')
         e.stopPropagation()
     })
 
@@ -31,10 +31,10 @@ $(() => {
     delbuttfun = () => {
         let i = 0
         return () => {
-            if (i++ % 2 == 0) {
-                $(".del-butt").show()
-            } else {
+            if ($(".del-butt:visible").length) {
                 $(".del-butt").hide()
+            } else {
+                $(".del-butt").show()
             }
         }
     }
@@ -43,7 +43,6 @@ $(() => {
     $(document).on('click', '.del-butt', function (e) {
         let flag = confirm('are you sure to delete ' + $(this).data('source'))
         if (flag) {
-            console.log('try to del id = ' + $(this).data('id'))
             ipcRenderer.send('record:del', $(this).data('id'))
         }
     })
@@ -162,21 +161,62 @@ function get_card_font_ra (text, linesize) {
     return ra
 }
 
-ipcRenderer.on('accounts', (event, accounts) => {
-    console.log(accounts)
+function refreshPagePlugin (currpage, maxpage) {
+    let pageHtml = ''
+    let classname = 'waves-effect'
+    if (currpage == 1) {
+        classname = 'disabled'
+    }
+    // 最多显示5页按钮
+    let maxdisplayPage = currpage + 2
+    let mindisplayPage = currpage - 2
+    if (maxdisplayPage < 5) {
+        maxdisplayPage = 5
+    }
+    if (maxdisplayPage > maxpage) {
+        maxdisplayPage = maxpage
+    }
+    if (mindisplayPage > maxdisplayPage - 4) {
+        mindisplayPage = maxdisplayPage - 4
+    }
+    if (mindisplayPage < 1) {
+        mindisplayPage = 1
+    }
+    pageHtml += `<li class="${classname}"><a href="javascript:void(0);" onclick='loadpage(${currpage - 1})'><i class="material-icons">chevron_left</i></a></li>`
+    for (let i = mindisplayPage, index = 1; i <= maxdisplayPage; i++,index++) {
+        classname = 'waves-effect'
+        if (i == currpage) {
+            classname = 'active'
+        }
+        pageHtml += `<li class="${classname}"><a href="javascript:void(0);" onclick='loadpage(${i})'>${i}</a></li>`
+    }
+    classname = 'waves-effect'
+    if (currpage == maxpage) {
+        classname = 'disabled'
+    }
+    pageHtml += `<li class="${classname}"><a href="javascript:void(0);"><i class="material-icons" onclick='loadpage(${currpage + 1}, ${maxpage})'>chevron_right</i></a></li>`
+    $('.pagination').html(pageHtml)
+}
+
+function loadpage(page, max) {
+    console.log('now will load ' + page)
+    if (page <= 0) return
+    if (max && page > max) return
+    ipcRenderer.send('loadpage', page)
+}
+
+ipcRenderer.on('accounts', (event, accounts, page) => {
+    $('.cube-row').empty()
     for (let acc of accounts) {
         appendAccountCard(acc)
     }
-})
-
-ipcRenderer.on('account:add_succ', (e, record) => {
-    console.log(record)
-    appendAccountCard(record)
+    console.log(page)
+    refreshPagePlugin(page.currpage, page.maxpage)
 })
 
 ipcRenderer.on('record:del_succ', (e, id) => {
     console.log('del succ ' + id)
     $('#' + id).fadeOut(800, () => {
-        $('#' + id).remove()
+        loadpage($('.pagination .active a').html())
     })
 })
