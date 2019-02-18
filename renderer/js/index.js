@@ -2,9 +2,7 @@ const rangener = nodeRequire('../rangener')
 
 $(() => {
     $("#addButton").click(() => {
-        $("#addform").show()
-        setRandomVal('#account')
-        setRandomVal('#password')
+        showAccountForm()
     })
 
     $(document).on('click', '.flipper', function (e) {
@@ -28,22 +26,21 @@ $(() => {
         tip('copy succ')
     })
 
-    delbuttfun = () => {
-        let i = 0
-        return () => {
-            if ($(".del-butt:visible").length) {
-                $(".del-butt").hide()
-            } else {
-                $(".del-butt").show()
-            }
-        }
-    }
-    $("#deleteButton").click(delbuttfun())
+    // edit bind
+    $(document).on('click', '.dropdown-content li:nth-child(1)', function (e) {
+        showAccountForm($(this).parent().data('id'), {
+            source: $(this).parent().data('source'),
+            account: $(this).parent().data('account'),
+            password: $(this).parent().data('password'),
+            remark: $(this).parent().data('remark'),
+        })
+    })
 
-    $(document).on('click', '.del-butt', function (e) {
-        let flag = confirm('are you sure to delete ' + $(this).data('source'))
+    // delete bind
+    $(document).on('click', '.dropdown-content li:nth-child(2)', function(e) {
+        let flag = confirm('are you sure to delete ' + $(this).parent().data('source'))
         if (flag) {
-            ipcRenderer.send('record:del', $(this).data('id'))
+            ipcRenderer.send('record:del', $(this).parent().data('id'))
         }
     })
 
@@ -54,7 +51,11 @@ $(() => {
         data.account = $('#account').val()
         data.password = $('#password').val()
         data.remark = $('#remark').val()
-        ipcRenderer.send('account:add', data)
+        if ($('#addform').data('id')) {
+            ipcRenderer.send('account:update', $('#addform').data('id'), data)
+        } else {
+            ipcRenderer.send('account:add', data)
+        }
         hideAddForm()
     })
 
@@ -67,10 +68,15 @@ $(() => {
 
 })
 
-function setRandomVal(inputId) {
+function setRandomVal(inputId, val) {
     $(inputId).attr('placeholder', '')
     $(inputId).next('label').addClass('active')
-    $(inputId).val(rangener.generate($(inputId + '-butt').val()))
+    if (val) {
+        $(inputId).val(val)
+    } else {
+        $(inputId).val(rangener.generate($(inputId + '-butt').val()))
+    }
+    
 }
 
 function initRandomCtl(inputId) {
@@ -85,13 +91,29 @@ function initRandomCtl(inputId) {
     })
 }
 
+function showAccountForm (id = null, data = null) {
+    $("#addform").show()
+    if (data) {
+        setRandomVal('#source', data.source)
+        setRandomVal('#account', data.account)
+        setRandomVal('#password', data.password)
+        setRandomVal('#remark', data.remark)
+    } else {
+        setRandomVal('#account')
+        setRandomVal('#password')
+    }
+    if (id) {
+        $("#addform").data('id', id)
+    }
+}
+
 function hideAddForm() {
     $('#account-butt').val(20)
     $('#password-butt').val(50)
     $("#addform").hide()
 }
 
-function appendAccountCard(record) {
+function refreshOrAddCard(record) {
     if (!record.data.remark) {
         record.data.remark = '...'
     } else {
@@ -111,7 +133,7 @@ function appendAccountCard(record) {
     let account_fontsize = get_card_font_ra(record.data.account, 16)
     let password_fontsize = get_card_font_ra(record.data.password, 16)
     let title_fontsize = get_card_font_ra(record.data.source, 20) * 1.5
-    $('.cube-row').append(`<div id='${record._id}' class="cube-card">
+    let account_div = `<div id='${record._id}' class="cube-card">
             <div class="flipper">
                 <div class="card-front card blue darken-3">
                     <div class="card-title cube-card-title">${record.data.source}</div>
@@ -143,10 +165,24 @@ function appendAccountCard(record) {
                     </div>
                 </div>
                 </div>
-            <button data-id='${record._id}' data-source='${record.data.source}' class="btn-floating del-butt" type="button" name="action" style="display: none">
-                <i class="material-icons">close</i>
+            <button data-target='dropdown-${record._id}' class="more-butt dropdown-trigger" type="button">
+                <i class="material-icons">more_vert</i>
             </button>
-        </div>`)
+
+            <ul id='dropdown-${record._id}' class='dropdown-content' data-id='${record._id}' data-source='${record.data.source}' data-account='${record.data.account}' data-password='${record.data.password}' data-remark='${record.data.remark}'>
+                <li><a href="#!"><i class="material-icons">edit</i></a></li>
+                <li><a href="#!"><i class="material-icons">delete</i></a></li>
+            </ul>
+        </div>`
+        console.log(record)
+        console.log($('#' + record._id))
+    if ($('#' + record._id).length > 0) {
+        console.log('replace')
+        $('#' + record._id).replaceWith(account_div)
+    } else {
+        console.log('append')
+        $('.cube-row').append(account_div)
+    }
 }
 
 // 粗略获取字体比例 避免内容超出, linesize是该行能放得下几个原字符
@@ -198,6 +234,14 @@ function refreshPagePlugin (currpage, maxpage) {
     $('.pagination').html(pageHtml)
 }
 
+function refreshDropdown () {
+    let elems = document.querySelectorAll('.dropdown-trigger');
+    let instances = M.Dropdown.init(elems, {
+        alignment: "right",
+        constrainWidth: false,
+    });
+}
+
 function loadpage(page, max) {
     console.log('now will load ' + page)
     if (page <= 0) return
@@ -207,11 +251,12 @@ function loadpage(page, max) {
 
 ipcRenderer.on('accounts', (event, accounts, page) => {
     $('.cube-row').empty()
+    console.log(accounts)
     for (let acc of accounts) {
-        appendAccountCard(acc)
+        refreshOrAddCard(acc)
     }
-    console.log(page)
     refreshPagePlugin(page.currpage, page.maxpage)
+    refreshDropdown()
 })
 
 ipcRenderer.on('record:del_succ', (e, id) => {
@@ -219,4 +264,8 @@ ipcRenderer.on('record:del_succ', (e, id) => {
     $('#' + id).fadeOut(800, () => {
         loadpage($('.pagination .active a').html())
     })
+})
+
+ipcRenderer.on('account:update_succ', (e, record) => {
+    refreshOrAddCard(record)
 })

@@ -128,6 +128,17 @@ ipcMain.on('account:add', (event, data) => {
     })
 })
 
+ipcMain.on('account:update', (event, id, data) => {
+    dbStore.update(id, data, () => {
+        dbStore.findAccounts({_id: id}, (err, docs) => {
+            if (docs) {
+                console.log('--------------------- update succ ' + id)
+                win.webContents.send('account:update_succ', docs[0])
+            }
+        })
+    })
+})
+
 ipcMain.on('record:del', (event, id) => {
     dbStore.delRecord(id)
     console.log('del record succ ' + id)

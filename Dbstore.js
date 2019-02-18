@@ -93,6 +93,10 @@ class Dbstore {
         this.db.find(condition).sort({crt: 1}).exec(callback)
     }
 
+    update (id, updateData, callback = () => {}) {
+        this.db.update({_id: id}, {$set: {data: updateData}}, {}, callback)
+    }
+
     delRecord (id) {
         this.db.remove({_id: id})
     }
