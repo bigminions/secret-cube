@@ -1,4 +1,5 @@
 const rangener = nodeRequire('../rangener')
+const addformcontent = $("#addform").html()
 
 $(() => {
     $("#addButton").click(() => {
@@ -44,7 +45,9 @@ $(() => {
         }
     })
 
-    $("#accountfrom").submit((e) => {
+    $(document).on('click', '#form-close-butt', hideAddForm)
+
+    $(document).on('submit', '#accountfrom', function(e) {
         e.preventDefault();
         var data = {}
         data.source = $('#source').val()
@@ -58,13 +61,6 @@ $(() => {
         }
         hideAddForm()
     })
-
-    $("#form-close-butt").click(e => {
-        hideAddForm()
-    })
-
-    initRandomCtl('#account')
-    initRandomCtl('#password')
 
 })
 
@@ -92,6 +88,11 @@ function initRandomCtl(inputId) {
 }
 
 function showAccountForm (id = null, data = null) {
+    // rebuild form div
+    $('#addform').empty()
+    $("#addform").html(addformcontent)
+    initRandomCtl('#account')
+    initRandomCtl('#password')
     $("#addform").show()
     if (data) {
         setRandomVal('#source', data.source)
@@ -111,6 +112,7 @@ function hideAddForm() {
     $('#account-butt').val(20)
     $('#password-butt').val(50)
     $("#addform").hide()
+    $("#addform").data('id', null)
 }
 
 function refreshOrAddCard(record) {
@@ -174,13 +176,9 @@ function refreshOrAddCard(record) {
                 <li><a href="#!"><i class="material-icons">delete</i></a></li>
             </ul>
         </div>`
-        console.log(record)
-        console.log($('#' + record._id))
     if ($('#' + record._id).length > 0) {
-        console.log('replace')
         $('#' + record._id).replaceWith(account_div)
     } else {
-        console.log('append')
         $('.cube-row').append(account_div)
     }
 }
