@@ -9,18 +9,13 @@
     <link rel="stylesheet" href="../node_modules/materialize-css/dist/css/materialize.min.css">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <style type="text/css">
-        .html {
-            height: 100%;
-        }
 
-        .body {
+        body {
             height: 100%;
-            display: -webkit-flex;
-            display: flex;
-            -webkit-align-items: center;
             align-items: center;
-            -webkit-justify-content: center;
             justify-content: center;
+            overflow-x: hidden;
+            overflow-y: hidden;
         }
 
         .top-menu {
@@ -149,6 +144,13 @@
         .pagination {
             margin: 0 auto;
             text-align: center;
+        }
+
+        .row.cube-row {
+            text-align: center;
+        }
+        .row.cube-row > div {
+            text-align: left;
         }
     </style>
 </head>

@@ -7,11 +7,15 @@ let win
 
 function main() {
     win = new BrowserWindow({
-        width: 950,
+        width: 960,
         height: 850,
         show: false,
         autoHideMenuBar: true,
         // frame: false, todo 设置无边框 参考https://blog.csdn.net/toubennuhai/article/details/53039612
+
+        webPreferences: {
+          nodeIntegration: true
+        }
     })
 
     win.loadFile(path.join('renderer', 'login.html'))
