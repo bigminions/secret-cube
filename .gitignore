@@ -2,3 +2,5 @@
 node_modules/
 
 *.cube
+
+secret-cube-*-win32-x64/
