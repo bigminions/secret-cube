@@ -9,7 +9,7 @@
   "author": "daren",
   "license": "MIT",
   "devDependencies": {
-    "electron": "^9.0.5",
+    "electron": "^9.3.1",
     "electron-rebuild": "^1.8.2"
   },
   "dependencies": {
